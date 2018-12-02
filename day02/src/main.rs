@@ -59,7 +59,7 @@ fn checksum(lines: &Vec<String>) -> i32 {
 
 fn find_close_match(lines: &Vec<String>) -> Option<(&String, &String)> {
     for i in 0..lines.len() {
-        for j in i..lines.len() {
+        for j in i + 1..lines.len() {
             if differ_by_exactly_one(&lines[i], &lines[j]) {
                 return Some((&lines[i], &lines[j]));
             }
