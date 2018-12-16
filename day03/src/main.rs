@@ -5,6 +5,7 @@ use std::io::prelude::*;
 use regex::Regex;
 use std::collections::HashSet;
 
+#[derive(Copy, Clone)]
 struct Area {
     claim_no: usize,
     x: usize,
@@ -14,7 +15,7 @@ struct Area {
 }
 
 fn main() {
-    let regex = Regex::new(r"#(\d)* @ (\d*),(\d*): (\d*)x(\d*)").unwrap();
+    let regex = Regex::new(r"#(\d*) @ (\d*),(\d*): (\d*)x(\d*)").unwrap();
 
     let input = io::stdin();
     let input: Vec<Area> = input.lock()
@@ -31,12 +32,12 @@ fn main() {
             }
         }).collect();
 
-    let mut fabric = [[0; 1000]; 1000];
+    let mut fabric = vec![vec![Vec::<Area>::new(); 1000]; 1000];
 
     input.iter().for_each(|area: &Area| {
         for i in area.x..(area.x + area.x_len) {
             for j in area.y..(area.y + area.y_len) {
-                fabric[i][j] += 1;
+                fabric[i][j].push(*area);
             }
         }
     });
@@ -48,22 +49,27 @@ fn main() {
         .map(|area: &Area| { area.claim_no })
         .collect();
 
-
-    eliminate_overlapping(&fabric, claims);
+    let claims = eliminate_overlapping(&fabric, claims);
+    for claim in claims {
+        println!("non-overlapping: {}", claim);
+    }
 }
 
-fn count_overlapping(fabric: &[[i32; 1000]; 1000]) -> usize {
+fn count_overlapping(fabric: &Vec<Vec<Vec<Area>>>) -> usize {
     fabric.iter()
         .flat_map(|row| row.iter())
-        .filter(|i| **i > 1)
+        .filter(|i| i.len() > 1)
         .count()
 }
 
-fn eliminate_overlapping(fabric: &[[i32; 1000]; 1000], mut claims: HashSet<usize>) -> HashSet<usize> {
+fn eliminate_overlapping(fabric: &Vec<Vec<Vec<Area>>>, mut claims: HashSet<usize>) -> HashSet<usize> {
     fabric.iter()
         .flat_map(|row| row.iter())
-        .filter(|i| **i > 1);
-        //.for_each(|i| claims.remove(i.into()))
+        .filter(|i| i.len() > 1)
+        .flatten()
+        .for_each(|i| {
+            claims.remove(&i.claim_no);
+        });
 
     claims
 }
